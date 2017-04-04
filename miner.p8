@@ -1,12 +1,15 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
--- PICO MINER
+-- pico miner
 -- a mining game for 1bitjam
 -- by misato 
 
+-- convenience
+SCREEN_SIZE = 128
 
--- State Machine 
+
+-- state machine 
 
 -- game states
 -- there are no enum in lua so followed the advice from here: https://www.allegro.cc/forums/thread/605178
@@ -18,25 +21,14 @@ game_states = {
 
 state = game_states.splash
 
-function change_state() 
-    cls()
-    if state == game_states.splash then   
-        state = game_states.game
-    elseif state == game_states.game then
-        state = game_states.gameover 
-    elseif state == game_states.gameover then
-        state = game_states.splash
-    end
-end
+-- entities (aka player, enemies, etc)
 
--- Entities (aka Player, enemies, etc)
+entity = {}
+entity.__index = entity
 
-Entity = {}
-Entity.__index = Entity
-
-function Entity.create(x,y,w,h)
+function entity.create(x,y,w,h)
 	local new_entity = {}
-	setmetatable(new_entity, Entity)
+	setmetatable(new_entity, entity)
 
 	new_entity.x = x
 	new_entity.y = y
@@ -46,16 +38,16 @@ function Entity.create(x,y,w,h)
 	return new_entity
 end
 
-function Entity:collide(other_entity) 
+function entity:collide(other_entity) 
 	return other_entity.x < self.x + self.w and self.x < other_entity.x + other_entity.w 
         and other_entity.y < self.y + self.h and self.y < other_entity.y + other_entity.h
 end
 
--- Add other vars as convenience to this player entity
+-- add other vars as convenience to this player entity
 -- for example, the sprite number or the lives left ;)
-player = Entity.create(0,0,8,8)
+player = entity.create(0,0,8,8)
 
--- Player input
+-- player input
 
 function handle_input()
     -- left
@@ -96,7 +88,7 @@ function handle_input()
     end
 end
 
--- Pico8 game funtions
+-- pico8 game funtions
 
 function _init()
     cls()
@@ -124,33 +116,71 @@ function _draw()
 end
 
 
--- SPLASH
+-- splash
 
 function update_splash()
     -- usually we want the player to press one button
-    -- if btn(5) then 
-    --     change_state()
-    -- end
+    if btn(5) or btn(4) then
+        fill_screen_status()
+        state = game_states.game
+    end
 end
 
 function draw_splash() 
-    rectfill(0,0,SCREEN_SIZE,SCREEN_SIZE,11)
-    local text = "PICO MINER"
+    rectfill(0,0,screen_size,screen_size,11)
+    local text = "pico miner"
     write(text, text_x_pos(text), 52,7)
 end
 
--- GAME
+-- game
 
 function update_game()
 
 end
 
+TILE_SIZE = 8
+screen_status = {}
+sprites = {3,4,5}
+
+function fill_screen_status()
+    local y_size = flr((SCREEN_SIZE/ 2)/TILE_SIZE)
+    local x_size = flr(SCREEN_SIZE/TILE_SIZE)
+    for x=1,x_size do
+         screen_status[x] = {}
+         for y=1,y_size do
+            local sprite = 4
+            if y == 1 then
+                sprite = 3
+            elseif flr(rnd(6) % 5 == 0) then
+                sprite = 5
+            end
+            screen_status[x][y] = sprite
+         end
+     end 
+end
+
+function coord_to_tile(coord) 
+    return flr(coord / TILE_SIZE)
+end
+
+function draw_screen_status()
+    for y=SCREEN_SIZE/2,SCREEN_SIZE,TILE_SIZE do
+        for x=0,SCREEN_SIZE,TILE_SIZE do
+            printh("draw_screen_status")
+            local i = coord_to_tile(x)
+            local j = coord_to_tile(y)
+            printh("i: " + i + " j: "+ j)
+            spr(screen_status[i][j],x,y)
+        end
+    end
+end
+
 function draw_game()
- 
+    draw_screen_status()
 end
 
 
--- GAME OVER
+-- game over
 
 function update_gameover()
 
@@ -160,13 +190,13 @@ function draw_gameover()
 
 end
 
--- Utils
+-- utils
 
--- Change this if you use a different resolution like 64x64
-SCREEN_SIZE = 128
+-- change this if you use a different resolution like 64x64
+screen_size = 128
 
 
--- calculate center position in X axis
+-- calculate center position in x axis
 -- this is asuming the text uses the system font which is 4px wide
 function text_x_pos(text)
     local letter_width = 4
@@ -175,11 +205,11 @@ function text_x_pos(text)
     local width = #text * letter_width
     
     -- if it's wider than the screen then it's multiple lines so we return 0 
-    if width > SCREEN_SIZE then 
+    if width > screen_size then 
         return 0 
     end 
 
-   return SCREEN_SIZE / 2 - flr(width / 2)
+   return screen_size / 2 - flr(width / 2)
 
 end
 
@@ -194,14 +224,15 @@ function write(text,x,y,color)
 end 
 
 
--- Returns if module of a/b == 0. Equals to a % b == 0 in other languages
-function mod_zero(a,b)
-   return a - flr(a/b)*b == 0
-end
-
-
-
 __gfx__
+00000000000000000000000033333333555555555555555500000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000034433433565555555a55555500000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000600043443444555555655aa55a5500000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000006000000006004444443455555555555555a500000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000006000000046044444444555555555555555500000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000406000004006444444445556555555a5555500000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000004000000040000444444445555555555555a5500000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000004000000040000044444444555555555555555500000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -322,14 +353,7 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
 __gff__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
