@@ -143,36 +143,38 @@ screen_status = {}
 sprites = {3,4,5}
 
 function fill_screen_status()
-    local y_size = flr((SCREEN_SIZE/ 2)/TILE_SIZE)
-    local x_size = flr(SCREEN_SIZE/TILE_SIZE)
+    -- +1 because the index starts in 1 and not in 0
+    local y_size = flr(SCREEN_SIZE/TILE_SIZE)+1
+    local x_size = flr(SCREEN_SIZE/TILE_SIZE)+1
     for x=1,x_size do
          screen_status[x] = {}
          for y=1,y_size do
             local sprite = 4
-            if y == 1 then
+            if x == 1 and y == 1 then
                 sprite = 3
-            elseif flr(rnd(6) % 5 == 0) then
+            elseif flr(rnd(10)) % 5 == 0 then
                 sprite = 5
             end
             screen_status[x][y] = sprite
          end
-     end 
+     end
+     
 end
 
 function coord_to_tile(coord) 
-    return flr(coord / TILE_SIZE)
+    return flr(coord / TILE_SIZE)+1
 end
 
 function draw_screen_status()
-    for y=SCREEN_SIZE/2,SCREEN_SIZE,TILE_SIZE do
-        for x=0,SCREEN_SIZE,TILE_SIZE do
-            printh("draw_screen_status")
-            local i = coord_to_tile(x)
-            local j = coord_to_tile(y)
-            printh("i: " + i + " j: "+ j)
-            spr(screen_status[i][j],x,y)
-        end
-    end
+
+    -- for y=SCREEN_SIZE/2,SCREEN_SIZE,TILE_SIZE do
+    --     for x=0,SCREEN_SIZE,TILE_SIZE do
+    --         local i = coord_to_tile(x)
+    --         local j = coord_to_tile(y)
+    --         printh(screen_status[i][j])
+    --         spr(screen_status[i][j],x,y)
+    --     end
+    -- end
 end
 
 function draw_game()
