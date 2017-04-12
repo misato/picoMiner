@@ -173,23 +173,89 @@ function handle_input()
     end
 end
 
+max_frames = 45
+min_frames = 16
+
+modulo = 5
+modulo_step = 2
+
+-- decorations
+cow = 96
+horse = 98
+
+tree = 100
+bush = 103
+
+decoration = {}
+decoration.__index = decoration
+
+function decoration.create(sprite,x,y,w,h)
+    local new_decoration = {}
+    setmetatable(new_decoration, decoration)
+
+    new_decoration.sprite = sprite
+    new_decoration.x = x
+    new_decoration.y = y
+    new_decoration.w = w
+    new_decoration.h = h
+
+    return new_decoration
+end
+
+decorations = {}
+
+decoration_sprites = { cow, horse, tree, bush }
+
+function create_decoration()
+    local index = flr(rnd(4))+1
+    local sprite = decoration_sprites[index]
+    local w = 2
+    local h = 2
+    if sprite == tree or sprite == bush then
+        w = 3
+    end
+
+    local decoration = decoration.create(sprite,128,16,w,h)
+    add(decorations,decoration)
+end
+
+function scroll_decoration(decoration) 
+    decoration.x -= 1
+    if decoration.x + decoration.w < -(decoration.w*8) then
+        del(decorations,decoration)
+    end
+end
+
+function draw_decoration(decoration)
+    spr(decoration.sprite, decoration.x, decoration.y, decoration.w, decoration.h)
+end
 
 function update_game()    
     frame_counter += 1
-    if frame_counter > 45 then
+    if frame_counter > max_frames then
         if flr(rnd(11)) % 5 == 0 then
             create_coin()
         else
             create_vegetable()
         end
+
+        create_decoration()
         frame_counter = 0
     end    
 
     foreach(vegetables, scroll_vegetable)
+    foreach(decorations, scroll_decoration)
 
     update_map_position()
 
     handle_input()
+
+    if score > 0 and score % modulo == 0 then 
+        if max_frames > min_frames then 
+            max_frames -= 1
+            modulo += modulo_step 
+        end
+    end
 end
 
 map_position = 0
@@ -270,11 +336,9 @@ function draw_game()
     draw_numbers(coins,91,2)
 
     foreach(vegetables,draw_vegetable)
+    foreach(decorations, draw_decoration)
 
-    --- player
-    -- spr(67,0,items_y_position,3,2)
     spr(player.sprite, player.x, player.y, player.w/8, player.h/8)
-
 end
 
 -- game over
