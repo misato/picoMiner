@@ -1,9 +1,9 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
--- pico miner
--- a mining game for 1bitjam
--- by misato 
+-- mi huerto
+-- entry for 1BitClickerJam
+-- by misato, pixelartm, bibiki
 
 -- state machine 
 
@@ -17,24 +17,17 @@ game_states = {
 
 state = game_states.splash
 
--- entities (aka player, enemies, etc)
 
--- function entity:collide(other_entity) 
--- 	return other_entity.x < self.x + self.w and self.x < other_entity.x + other_entity.w 
---         and other_entity.y < self.y + self.h and self.y < other_entity.y + other_entity.h
--- end
+-- player 
+items_y_position = 72
 
--- player input
-
-function handle_input()
-    -- button 1
-    if btn(4) then
-    end
-
-    -- button 2
-    if btn(5) then
-    end
-end
+player = {
+    sprite = 67,
+    x = 0,
+    y = items_y_position,
+    w = 24,
+    h = 16
+}
 
 -- pico8 game funtions
 
@@ -95,6 +88,7 @@ function vegetable.create(sprite,x,y)
     new_vegetable.sprite = sprite
     new_vegetable.x = x
     new_vegetable.y = y
+    new_vegetable.is_coin = false
 
     return new_vegetable
 end
@@ -102,6 +96,8 @@ end
 vegetables = {}
 veggy_sprites = {128,130,132,134,136}
 max_vegetables = 3
+coin_bg = 142
+coin_frames = { 160, 162, 164, 166, 168, 170 }
 
 frame_counter = 0
 
@@ -115,16 +111,36 @@ function create_vegetable()
     add(vegetables,vegetable)
 end
 
+function create_coin()
+    local coin = vegetable.create(coin_frames[1],128, items_y_position)
+    coin.is_coin = true
+    coin.animation_index = 1
+    add(vegetables, coin)
+end
+
+function animate_coin(coin) 
+    coin.animation_index += 1
+    if coin.animation_index > count(coin_frames) then
+        coin.animation_index = 1
+    end
+    coin.sprite = coin_frames[coin.animation_index]
+end
+
 function scroll_vegetable(vegetable)
+    if vegetable.is_coin then
+        animate_coin(vegetable)
+    end
+
     vegetable.x -= 1
-    if vegetable.x <= 24 then
+    if vegetable.x <= 0 then
         del(vegetables,vegetable)
-        -- add score
-        score += 1
     end
 end
 
 function draw_vegetable(vegetable)
+    if vegetable.is_coin then
+        spr(coin_bg, vegetable.x, vegetable.y, 2,2)
+    end
     spr(vegetable.sprite,vegetable.x, vegetable.y,2,2)
 end
 
@@ -141,22 +157,43 @@ function update_map_position()
     end
 end
 
+function handle_input()
+    -- button 1
+    if btn(4) or btn(5) then
+        for vegetable in all(vegetables) do
+            if vegetable.x <= player.x + player.w then
+                if vegetable.is_coin then
+                    coins += 1
+                else 
+                    score += 1
+                end
+                del(vegetables, vegetable)
+            end
+        end
+    end
+end
+
 
 function update_game()    
     frame_counter += 1
-    if frame_counter > 45 then 
-        create_vegetable()
+    if frame_counter > 45 then
+        if flr(rnd(11)) % 5 == 0 then
+            create_coin()
+        else
+            create_vegetable()
+        end
         frame_counter = 0
     end    
 
     foreach(vegetables, scroll_vegetable)
 
     update_map_position()
+
+    handle_input()
 end
 
 map_position = 0
 map_position2 = 128
-items_y_position = 72
 
 score = 0
 coins = 0
@@ -235,7 +272,8 @@ function draw_game()
     foreach(vegetables,draw_vegetable)
 
     --- player
-    spr(67,0,items_y_position,3,2)
+    -- spr(67,0,items_y_position,3,2)
+    spr(player.sprite, player.x, player.y, player.w/8, player.h/8)
 
 end
 
