@@ -161,16 +161,76 @@ items_y_position = 72
 score = 0
 coins = 0
 
+-- starting values for the number texture
+number_texture = {
+    x = 56,
+    y = 96,
+    w = 5, 
+    h = 4
+}
+
+function calculate_digit_position(digit)
+    local digit_position = {
+        x = 56,
+        y = 96
+    }
+    if digit < 5 then
+        digit_position.x = 56 + number_texture.w * digit
+    else 
+        digit_position.x = 56 + number_texture.w * (digit - 5)
+        digit_position.y = 96 + number_texture.h
+    end
+
+    return digit_position
+end
+
+
+function separate_digits(number)
+   local digits = {}
+
+    if number == 0 then 
+        add(digits, number)
+    end
+
+
+    while number > 0 do 
+        local digit = number % 10
+        add(digits,digit)
+        number = flr(number/10)
+    end
+
+    return digits
+end
+
+
+function draw_numbers(number, x_pos, y_pos) 
+    local number_x = number_texture.x
+    local number_y = number_texture.y
+
+    local digits = separate_digits(number)
+
+    local count = count(digits)
+
+    while count > 0 do
+        local digit = digits[count]
+        local position = calculate_digit_position(digit)
+        printh(digit..": "..position.x..","..position.y)
+
+        sspr(position.x, position.y, number_texture.w, number_texture.h, x_pos, y_pos)
+        x_pos += number_texture.w
+        count -= 1
+    end
+
+end
+
 function draw_game()
 
     map(0,0,0,0,16,2)
     map(0,2,map_position,16,16,14)
     map(0,2,map_position2,16,16,14)
 
-    -- write(score,32,0,7)
-    -- write(coins,88,0,7)
-
-    sspr(56,96,5,4,35,2)
+    draw_numbers(score,35,2)
+    draw_numbers(coins,91,2)
 
     foreach(vegetables,draw_vegetable)
 
