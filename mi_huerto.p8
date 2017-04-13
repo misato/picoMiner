@@ -365,8 +365,6 @@ function draw_numbers(number, x_pos, y_pos)
     while count > 0 do
         local digit = digits[count]
         local position = calculate_digit_position(digit)
-        printh(digit..": "..position.x..","..position.y)
-
         sspr(position.x, position.y, number_texture.w, number_texture.h, x_pos, y_pos)
         x_pos += number_texture.w
         count -= 1
