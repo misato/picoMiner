@@ -17,6 +17,7 @@ game_states = {
 
 state = game_states.splash
 
+last_time = 0
 
 -- player 
 items_y_position = 72
@@ -127,6 +128,7 @@ function update_splash()
     if btn(5) or btn(4) then
         create_vegetable()
         state = game_states.game
+        last_time = time()
         music(1)
     end
 end
@@ -209,9 +211,9 @@ frame_counter = 0
 mistakes = 0
 
 function create_vegetable()
-    if count(vegetable) >= max_vegetables then
-        return
-    end
+    -- if count(vegetable) >= max_vegetables then
+    --     return
+    -- end
     local index = flr(rnd(5))+1
     local sprite = veggy_sprites[index]
     local vegetable = vegetable.create(sprite,128,items_y_position, vegetable_type.veggy)
@@ -413,12 +415,22 @@ function update_game()
             update_player_state(player_state.harvester)
     end
 
-    if score > 0 and score % modulo == 0 then 
-        if max_frames > min_frames then 
-            max_frames -= 1
-            modulo += modulo_step 
+
+    if time() - last_time > 10 then
+        printh("max_frames")
+        max_frames -= 5
+        if max_frames < 5 then 
+            max_frames = 5
         end
+        last_time = time()
     end
+
+    -- if score > 0 and score % modulo == 0 then 
+    --     if max_frames > min_frames then 
+    --         max_frames -= 1
+    --         modulo += modulo_step 
+    --     end
+    -- end
 
     if score < 0 or mistakes >= 3 then
         state = game_states.gameover
